@@ -1,13 +1,7 @@
-# Express Slow Down
 
-[![Build Status](https://secure.travis-ci.org/nfriedly/express-slow-down.png?branch=master)](http://travis-ci.org/nfriedly/express-slow-down)
-[![NPM version](http://badge.fury.io/js/express-slow-down.png)](https://npmjs.org/package/express-slow-down "View this project on NPM")
-[![Dependency Status](https://david-dm.org/nfriedly/express-slow-down.png?theme=shields.io)](https://david-dm.org/nfriedly/express-slow-down)
-[![Development Dependency Status](https://david-dm.org/nfriedly/express-slow-down/dev-status.png?theme=shields.io)](https://david-dm.org/nfriedly/express-slow-down#info=devDependencies)
+# Koa Slow Down
 
-Basic rate-limiting middleware for Express that slows down responses rather than blocking them outright. Use to limit repeated requests to public APIs and/or endpoints such as password reset.
-
-Plays nice with [Express Rate Limit](https://npmjs.org/package/express-rate-limit)
+Basic rate-limiting middleware for Koa that slows down responses rather than blocking them outright. Use to limit repeated requests to public APIs and/or endpoints such as password reset.
 
 Note: this module does not share state with other processes/servers by default. This module was extracted from Express Rate Limit 2.x and can work with it's stores:
 
@@ -17,12 +11,10 @@ Note: this module does not share state with other processes/servers by default. 
 - [Redis Store](https://npmjs.com/package/rate-limit-redis)
 - [Memcached Store](https://npmjs.org/package/rate-limit-memcached)
 
-Note: when using express-slow-down and express-rate-limit with an external store, you'll need to create two instances of the store and provide different prefixes so that they don't double-count requests.
-
 ## Install
 
 ```sh
-$ npm install --save express-slow-down
+$ npm install --save koa-slow-down
 ```
 
 ## Usage
@@ -30,9 +22,9 @@ $ npm install --save express-slow-down
 For an API-only server where the rules should be applied to all requests:
 
 ```js
-const slowDown = require("express-slow-down");
+const slowDown = require("koa-slow-down");
 
-app.enable("trust proxy"); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS if you use an ELB, custom Nginx setup, etc)
+app.proxy = true; // only if you're behind a reverse proxy (Heroku, Bluemix, AWS if you use an ELB, custom Nginx setup, etc)
 
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -48,12 +40,12 @@ const speedLimiter = slowDown({
 app.use(speedLimiter);
 ```
 
-For a "regular" web server (e.g. anything that uses `express.static()`), where the rate-limiter should only apply to certain requests:
+For a "regular" web server where the rate-limiter should only apply to certain requests:
 
 ```js
-const slowDown = require("express-slow-down");
+const slowDown = require("koa-slow-down");
 
-app.enable("trust proxy"); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS if you use an ELB, custom Nginx setup, etc)
+app.proxy = true; // only if you're behind a reverse proxy (Heroku, Bluemix, AWS if you use an ELB, custom Nginx setup, etc)
 
 const resetPasswordSpeedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -62,7 +54,7 @@ const resetPasswordSpeedLimiter = slowDown({
 });
 
 // only apply to POST requests to /reset-password/
-app.post("/reset-password/", resetPasswordSpeedLimiter, function(req, res) {
+app.post("/reset-password/", resetPasswordSpeedLimiter, function(ctx) {
   // handle /reset-password/ request here...
 });
 ```
@@ -110,18 +102,18 @@ A `req.slowDown` property is added to all requests with the following fields:
 
 - **skipFailedRequests**: when `true` failed requests (response status >= 400) won't be counted. Defaults to `false`.
 - **skipSuccessfulRequests**: when `true` successful requests (response status < 400) won't be counted. Defaults to `false`.
-- **keyGenerator**: Function used to generate keys. By default user IP address (req.ip) is used. Defaults:
+- **keyGenerator**: Function used to generate keys. By default user IP address (ctx.ip) is used. Defaults:
 
   ```js
-  function (req /*, res*/) {
-      return req.ip;
+  function (ctx) {
+      return ctx.ip;
   }
   ```
 
 - **skip**: Function used to skip requests. Returning true from the function will skip limiting for that request. Defaults:
 
   ```js
-  function (/*req, res*/) {
+  function (ctx) {
       return false;
   }
   ```
@@ -129,13 +121,12 @@ A `req.slowDown` property is added to all requests with the following fields:
 - **onLimitReached**: Function to listen the first time the limit is reached within windowMs. Defaults:
 
   ```js
-  function (req, res, options) {
+  function (ctx, options) {
   /* empty */
   }
   ```
 
 - **store**: The storage to use when persisting rate limit attempts. By default, the [MemoryStore](lib/memory-store.js) is used.
-  - Note: when using express-slow-down and express-rate-limit with an external store, you'll need to create two instances of the store and provide different prefixes so that they don't double-count requests.
 
 ## License
 
