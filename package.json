@@ -1,6 +1,6 @@
 {
   "name": "koa-slow-down",
-  "version": "0.0.0",
+  "version": "1.0.1",
   "description": "Basic IP rate-limiting middleware for Koa that slows down responses rather than blocking the user.",
   "homepage": "https://github.com/henrik9999/koa-slow-down",
   "author": {
